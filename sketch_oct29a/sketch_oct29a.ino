@@ -2,9 +2,10 @@
 //#include "QList.cpp" 
 
 #include <TimerOne.h>
-
+float koefDTW=1;
 volatile QList <byte> mySignal;
 
+int d11=11;
 // This example uses the timer interrupt to blink an LED
 // and also demonstrates how to share a variable between
 // the interrupt and the main program.
@@ -12,6 +13,9 @@ volatile QList <byte> mySignal;
 
 void setup(void)
 {
+  pinMode(d11, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(7, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   //Timer1.initialize(100000);// в микросекундах
   Timer1.initialize(50000);// в микросекундах
@@ -31,7 +35,7 @@ void blinkLED(void)
   } else {
     ledState = LOW;
   }
-  digitalWrite(LED_BUILTIN, ledState);
+  digitalWrite(LED_BUILTIN, ledState);  
   addItemSignal();
 }
 
@@ -58,31 +62,30 @@ void loop(void)
   }
   
   interrupts();
-   //int m2=millis();
-  //Serial.println(m2-m1);
-  
- /*
-  for (int i=0;i<signalSize;i++){
-    //Serial.print(signalCopy.get(signalSize-i-1));
-    Serial.print(signalCopy.get(i));
-    Serial.print(" ");
-  }
- */
-  //Serial.println();
-  
+ 
   //тут будет DTW
   int disctance=DTWrun(signalCopy);
+  if (disctance>0 && disctance<40){koefDTW+=0.1;}
+  if (disctance<0 && disctance>-40){koefDTW-=0.1;}
+  if(koefDTW<0.1){koefDTW=0.1;}
+  if(koefDTW>2){koefDTW=1.9;}
   Serial.print(" distance ");
   Serial.print(disctance);
   Serial.println();
   signalCopy.clear();
   //delete &signalCopy;
 }
+
 void addItemSignal(){
   int curSig=analogRead(A0);
   if(curSig>255){
     curSig=255;
   }
+  float Rdist=analogRead(A1)/1023.0;
+  //Serial.println(Rdist);
+  if(curSig>50){analogWrite(d11, curSig*Rdist*koefDTW);}
+  if(curSig>0 && curSig<50){digitalWrite(8, ledState);}
+  if(curSig>50 && curSig<150){analogWrite(7, curSig*Rdist*3*koefDTW);}
   //Serial.println(mySignal.size());
   while (mySignal.size()>=70){
    mySignal.pop_back();
