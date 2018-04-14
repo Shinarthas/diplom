@@ -65,13 +65,13 @@ void loop(void)
  
   //тут будет DTW
   int disctance=DTWrun(signalCopy);
-  if (disctance>0 && disctance<40){koefDTW+=0.1;}
-  if (disctance<0 && disctance>-40){koefDTW-=0.1;}
+  if (disctance>0 && disctance<500){koefDTW+=0.1;}
+  if (disctance<0 && disctance>-500){koefDTW-=0.1;}
   if(koefDTW<0.1){koefDTW=0.1;}
   if(koefDTW>2){koefDTW=1.9;}
-  Serial.print(" distance ");
-  Serial.print(disctance);
-  Serial.println();
+  //Serial.print(" distance ");
+  //Serial.print(disctance);
+  //Serial.println();
   signalCopy.clear();
   //delete &signalCopy;
 }
@@ -82,7 +82,7 @@ void addItemSignal(){
     curSig=255;
   }
   float Rdist=analogRead(A1)/1023.0;
-  //Serial.println(Rdist);
+  Serial.println(curSig);
   if(curSig>50){analogWrite(d11, curSig*Rdist*koefDTW);}
   if(curSig>0 && curSig<50){digitalWrite(8, ledState);}
   if(curSig>50 && curSig<150){analogWrite(7, curSig*Rdist*3*koefDTW);}
