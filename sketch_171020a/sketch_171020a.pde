@@ -56,10 +56,10 @@ void draw() {
          if ( value != null ) {
            int foo = tryParse(value);
            signal.add(foo);
-           while(signal.size()>500){
+           while(signal.size()>10){
              signal.remove();
            }
-           //print(value);
+            println(signal);
            // unshift: add data from left to right (first in)
             myChart.push("signal", (foo));
             float[] n2 = {1.5f, 3.9f, 4.1f, 3.3f};
