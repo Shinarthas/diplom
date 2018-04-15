@@ -1,5 +1,6 @@
 import processing.serial.*;
 import controlP5.*;
+import java.util.*;
 
 ControlP5 cp5;
 Chart myChart;
@@ -7,7 +8,7 @@ Chart myChart;
 Serial mySerial;
 PrintWriter output;
 
-IntList signal;
+LinkedList<Integer> signal = new LinkedList<Integer>();
 
 int i=10;
 public static Integer tryParse(String text) {
@@ -27,7 +28,7 @@ void setup() {
    cp5 = new ControlP5(this);
    smooth();
    
-    myChart = cp5.addChart("hello")
+    myChart = cp5.addChart("PULSEWAVE SIGNAL AND DTW DISTNACE")
                .setPosition(300, 10)
                .setSize(490, 200)
                .setRange(0, 255)
@@ -45,23 +46,30 @@ void setup() {
 
   myChart.addDataSet("earth");
   myChart.setColors("earth", color(255), color(0, 255, 0));
-  myChart.updateData("earth", 1, 2, 10, 3);
+  myChart.updateData("earth", new float[500]);
 }
 void draw() {
     background(200);
-    
     fill(30);
     if (mySerial.available() > 0 ) {
          String value = mySerial.readString();
          if ( value != null ) {
            int foo = tryParse(value);
-           print(value);
+           signal.add(foo);
+           while(signal.size()>500){
+             signal.remove();
+           }
+           //print(value);
            // unshift: add data from left to right (first in)
-            myChart.unshift("signal", (foo));
+            myChart.push("signal", (foo));
+            float[] n2 = {1.5f, 3.9f, 4.1f, 3.3f};
+            float[] n1 = {1.5f, 3.9f, 4.1f, 5.3f};
+            DTW dtw = new DTW(n1, n2);
             
+            int d=(int) dtw.getDistance();
             // push: add data from right to left (last in)
-            myChart.push("earth", (sin(frameCount*0.1))*127+127);
-           rect(100, 100, foo, 200);
+            myChart.push("earth", d*100);
+           //rect(100, 100, foo, 200);
               output.println( value );
          }
     }
