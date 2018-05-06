@@ -10,6 +10,12 @@ int d11=11;
 // and also demonstrates how to share a variable between
 // the interrupt and the main program.
 
+int freq=0;
+int therepy=1;
+int signalstep=1;
+bool switcher=true;
+
+bool mode=true;
 
 void setup(void)
 {
@@ -18,6 +24,7 @@ void setup(void)
   pinMode(7, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   //Timer1.initialize(100000);// в микросекундах
+  ///Timer1.initialize(20000);// в микросекундах
   Timer1.initialize(50000);// в микросекундах
   Timer1.attachInterrupt(blinkLED); // blinkLED to run every 0.10 seconds
   Serial.begin(9600);
@@ -51,7 +58,31 @@ void loop(void)
   // not change while we are reading.  To minimize the time
   // with interrupts off, just quickly make a copy, and then
   // use the copy while allowing the interrupt to keep working.
-
+  if(Serial.available()){
+    char val=Serial.read();
+    if (val=='p'){
+      mode=true;
+    }
+    if(val=='c'){
+      mode=false;      
+    }
+    if(val=='1'){
+      therepy=1;      
+    }
+    if(val=='2'){
+      therepy=2;      
+    }
+    if(val=='3'){
+      therepy=3;      
+    }
+    if(val=='4'){
+      therepy=4;      
+    }
+    if(val=='5'){
+      therepy=5;      
+    }
+    //Serial.println(500);
+  }
   //int m1=millis();
   noInterrupts();
   // тут прочитать стек
@@ -77,22 +108,36 @@ void loop(void)
 }
 
 void addItemSignal(){
-  int curSig=analogRead(A0);
-  if(curSig>255){
-    curSig=255;
-  }
-  float Rdist=analogRead(A1)/1023.0;
-  Serial.println(curSig);
-  if(curSig>50){analogWrite(d11, curSig*Rdist*koefDTW);}
-  if(curSig>0 && curSig<50){digitalWrite(8, ledState);}
-  if(curSig>50 && curSig<150){analogWrite(7, curSig*Rdist*3*koefDTW);}
-  //Serial.println(mySignal.size());
-  while (mySignal.size()>=70){
-   mySignal.pop_back();
-  }
-  //Serial.println(mySignal.size());
+  freq+=1;
   
-  mySignal.push_front((byte)curSig);
+    int curSig=analogRead(A0);
+    if(curSig>255){
+      curSig=255;
+    }
+    float Rdist=analogRead(A1)/1023.0;
+    while (mySignal.size()>=70){
+     mySignal.pop_back();
+    }
+    //Serial.println(mySignal.size());
+    Serial.println(curSig);
+    mySignal.push_front((byte)curSig);
+  if (freq%therepy==0){
+    int curSig=analogRead(A0);
+    float Rdist=analogRead(A1)/1023.0;
+
+    int tmp=curSig*Rdist*koefDTW;
+    if(switcher && mode){
+      tmp=0;
+    }
+    switcher=!switcher;
+    if(curSig>10){analogWrite(d11, tmp);}
+    if(curSig>0 && curSig<50){digitalWrite(8, ledState);}
+    if(curSig>50 && curSig<150){analogWrite(7, curSig*Rdist*3*koefDTW);}
+    //Serial.println(mySignal.size());
+    
+    freq=0;
+  }
+  
 }
 
 int DTWrun( QList <byte> &v) {

@@ -13,13 +13,16 @@ PrintWriter output;
 
 LinkedList<Integer> signal = new LinkedList<Integer>();
 LinkedList<Integer> boof = new LinkedList<Integer>();
+LinkedList<Integer> boofcopy = new LinkedList<Integer>();
 
 //constolls
 int startPoint=0,endPoint=0;
-int switcher=140;
+int switcher=40;
 int i=30;
-int counter=30;
+int counter=15;
 boolean tr=true;
+
+char mode='p';
 
 public static Integer tryParse(String text) {
   try {
@@ -54,12 +57,13 @@ void setup() {
   .setSize(280, 50)
   .setFont(font);
   
-  frequency=cp5.addSlider("")
+  frequency=cp5.addSlider("fq")
+     .setBroadcast(false) 
     .setPosition(10, 190)
     .setSize(280, 100)
     .setRange(1,5)
     .setValueLabel("")
-    .setFont(font);
+     .setBroadcast(true);
     
     textSize(20);
     text("Frequency", 10, 300);
@@ -108,6 +112,7 @@ void draw() {
     text("Frequency", 50, 320);
     if (mySerial.available() > 0 ) {
          String value = mySerial.readString();
+         //println(value);
          if ( value != null ) {
            int foo = tryParse(value);
            int len=signal.size();
@@ -145,26 +150,70 @@ void draw() {
                 }
                 DTW dtw = new DTW(pattern, floatArray);
                 int tmp1=(int) dtw.getDistance();
-                
                 if(tmp1<500){
+                   boofcopy=boof;
+                  
+                  
                   d=int(200*(1-(tmp1/500.0))+50);
+                   meanChart.updateData("R", floatArray);
                 }
                 
-                println(d);
+                //println(d);
                 tr=true;
-                meanChart.updateData("R", floatArray);
+              
               }
             }
             // push: add data from right to left (last in)
             myChart.push("earth", d);
            //rect(100, 100, foo, 200);
-              output.println( value );
+              //output.println( value );
          }
     }
 }
-
-void keyPressed() {
+void Save(){
+    output = createWriter( "data.txt" );
+    for(int i=0; i<boofcopy.size(); i++){
+      output.println( boofcopy.get(i) );
+    }
+    
     output.flush();  // Writes the remaining data to the file
     output.close();  // Finishes the file
-    exit();  // Stops the program
+}
+void Clear(){
+    signal.clear();
+    boof.clear();
+    boofcopy.clear();
+    myChart.setData("signal", new float[500]);
+    myChart.updateData("earth", new float[500]);
+    meanChart.updateData("R", new float[100]);
+}
+void Mode(){
+    if(mode=='p'){
+      mode='c';
+    }else{mode='p';}
+    
+    println(mode);
+    mySerial.write(mode);    
+}
+void fq(float theVal) {
+  int val=(int)theVal;
+  val=6-val;
+  println(val);
+  switch (val) {
+            case 1:  mySerial.write('1');    
+                     break;
+            case 2:  mySerial.write('2');
+                     break;
+            case 3:  mySerial.write('3');
+                     break;
+            case 4:  mySerial.write('4');
+                     break;
+            case 5:  mySerial.write('5');
+                     break;
+        }
+}
+void keyPressed() {
+    //output.flush();  // Writes the remaining data to the file
+    //output.close();  // Finishes the file
+    //exit();  // Stops the program
 }
